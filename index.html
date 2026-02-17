@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Finance App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Finance App</h1>
+
+<div id="auth">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Senha">
+  <button onclick="register()">Registrar</button>
+  <button onclick="login()">Login</button>
+</div>
+
+<hr>
+
+<div id="app" style="display:none">
+
+  <h2>Nova Transação</h2>
+
+  <select id="type">
+    <option value="income">Receita</option>
+    <option value="expense">Despesa</option>
+  </select>
+
+  <input id="amount" placeholder="Valor">
+  <input id="description" placeholder="Descrição">
+  <input id="date" type="date">
+
+  <button onclick="addTransaction()">Salvar</button>
+
+  <h2>Transações</h2>
+  <ul id="list"></ul>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
