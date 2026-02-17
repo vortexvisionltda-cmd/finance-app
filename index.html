@@ -1,142 +1,233 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Finance App</title>
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
-<style>
-body{
-  font-family: Arial;
-  background:#0f172a;
-  color:white;
-  display:flex;
-  justify-content:center;
-  padding:40px;
-}
+export default function App() {
+  const [descricao, setDescricao] = useState("");
+  const [valor, setValor] = useState("");
+  const [tipo, setTipo] = useState("expense");
+  const [categoria, setCategoria] = useState("Outros");
+  const [lista, setLista] = useState([]);
 
-.container{
-  background:#111827;
-  padding:25px;
-  border-radius:12px;
-  width:400px;
-  box-shadow:0 0 20px #000;
-}
+  const categorias = [
+    "Moradia",
+    "Alimentação",
+    "Transporte",
+    "Lazer",
+    "Saúde",
+    "Salário",
+    "Investimentos",
+    "Outros"
+  ];
 
-h1{
-  text-align:center;
-}
+  useEffect(() => {
+    const dados = localStorage.getItem("finance-data");
+    if (dados) setLista(JSON.parse(dados));
+  }, []);
 
-input, select{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-}
+  useEffect(() => {
+    localStorage.setItem("finance-data", JSON.stringify(lista));
+  }, [lista]);
 
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  background:#22c55e;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
+  function adicionar() {
+    if (!descricao || !valor) return;
 
-button:hover{
-  background:#16a34a;
-}
+    const novo = {
+      id: Date.now(),
+      descricao,
+      valor: parseFloat(valor),
+      tipo,
+      categoria,
+      data: new Date().toLocaleDateString()
+    };
 
-.list{
-  margin-top:20px;
-}
+    setLista([novo, ...lista]);
+    setDescricao("");
+    setValor("");
+  }
 
-.item{
-  background:#1f2937;
-  padding:10px;
-  border-radius:8px;
-  margin-top:8px;
-  display:flex;
-  justify-content:space-between;
-}
+  function remover(id) {
+    setLista(lista.filter((item) => item.id !== id));
+  }
 
-.income{color:#22c55e;}
-.expense{color:#ef4444;}
+  const receitas = lista
+    .filter((i) => i.tipo === "income")
+    .reduce((acc, i) => acc + i.valor, 0);
 
-.total{
-  margin-top:20px;
-  font-size:20px;
-  text-align:center;
-}
-</style>
-</head>
+  const despesas = lista
+    .filter((i) => i.tipo === "expense")
+    .reduce((acc, i) => acc + i.valor, 0);
 
-<body>
+  const saldo = receitas - despesas;
 
-<div class="container">
+  const dadosGrafico = categorias
+    .map((cat) => {
+      const total = lista
+        .filter((i) => i.categoria === cat && i.tipo === "expense")
+        .reduce((acc, i) => acc + i.valor, 0);
 
-<h1>💰 Finance App</h1>
+      return { name: cat, value: total };
+    })
+    .filter((d) => d.value > 0);
 
-<select id="type">
-  <option value="income">Receita</option>
-  <option value="expense">Despesa</option>
-</select>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white p-6">
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-3xl font-bold mb-8 text-center"
+      >
+        App Financeiro Completo
+      </motion.h1>
 
-<input id="desc" placeholder="Descrição">
-<input id="value" type="number" placeholder="Valor">
+      {/* Cards resumo */}
+      <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-8">
+        <Card className="bg-slate-900 border-slate-700">
+          <CardContent className="p-6 text-center">
+            <p>Receitas</p>
+            <h2 className="text-2xl font-bold text-green-400">
+              R$ {receitas.toFixed(2)}
+            </h2>
+          </CardContent>
+        </Card>
 
-<button onclick="add()">Adicionar</button>
+        <Card className="bg-slate-900 border-slate-700">
+          <CardContent className="p-6 text-center">
+            <p>Despesas</p>
+            <h2 className="text-2xl font-bold text-red-400">
+              R$ {despesas.toFixed(2)}
+            </h2>
+          </CardContent>
+        </Card>
 
-<div class="list" id="list"></div>
-
-<div class="total" id="total">Saldo: R$ 0</div>
-
-</div>
-
-<script>
-let data = [];
-
-function add(){
-
-  const type = document.getElementById("type").value;
-  const desc = document.getElementById("desc").value;
-  const value = Number(document.getElementById("value").value);
-
-  if(!desc || !value) return alert("Preencha tudo");
-
-  data.push({type, desc, value});
-
-  render();
-}
-
-function render(){
-
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  let total = 0;
-
-  data.forEach(item=>{
-
-    total += item.type=="income" ? item.value : -item.value;
-
-    list.innerHTML += `
-      <div class="item">
-        <span>${item.desc}</span>
-        <span class="${item.type}">
-          ${item.type=="income" ? "+" : "-"} R$ ${item.value}
-        </span>
+        <Card className="bg-slate-900 border-slate-700">
+          <CardContent className="p-6 text-center">
+            <p>Saldo</p>
+            <h2 className="text-2xl font-bold text-blue-400">
+              R$ {saldo.toFixed(2)}
+            </h2>
+          </CardContent>
+        </Card>
       </div>
-    `;
-  });
 
-  document.getElementById("total").innerText =
-    "Saldo: R$ " + total;
+      {/* Formulário */}
+      <Card className="max-w-5xl mx-auto mb-8 bg-slate-900 border-slate-700">
+        <CardContent className="p-6 grid md:grid-cols-5 gap-3">
+          <Input
+            placeholder="Descrição"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="text-black"
+          />
+
+          <Input
+            type="number"
+            placeholder="Valor"
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            className="text-black"
+          />
+
+          <Select onValueChange={setTipo} defaultValue="expense">
+            <SelectTrigger className="bg-white text-black">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="income">Receita</SelectItem>
+              <SelectItem value="expense">Despesa</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={setCategoria} defaultValue="Outros">
+            <SelectTrigger className="bg-white text-black">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categorias.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button onClick={adicionar}>Adicionar</Button>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico */}
+      <Card className="max-w-5xl mx-auto mb-8 bg-slate-900 border-slate-700">
+        <CardContent className="p-6">
+          <h2 className="mb-4 font-semibold">Gastos por Categoria</h2>
+          <div style={{ width: "100%", height: 300 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={dadosGrafico}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={100}
+                  label
+                >
+                  {dadosGrafico.map((_, index) => (
+                    <Cell key={index} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista */}
+      <div className="max-w-5xl mx-auto space-y-3">
+        {lista.map((item) => (
+          <motion.div key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Card className="bg-slate-900 border-slate-700">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">{item.descricao}</p>
+                  <p className="text-sm text-slate-400">
+                    {item.categoria} • {item.data}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`font-bold ${
+                      item.tipo === "income"
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    R$ {item.valor.toFixed(2)}
+                  </span>
+
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => remover(item.id)}
+                  >
+                    <Trash2 size={18} />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
 }
-</script>
-
-</body>
-</html>
