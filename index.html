@@ -1,233 +1,220 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>App Financeiro</title>
 
-export default function App() {
-  const [descricao, setDescricao] = useState("");
-  const [valor, setValor] = useState("");
-  const [tipo, setTipo] = useState("expense");
-  const [categoria, setCategoria] = useState("Outros");
-  const [lista, setLista] = useState([]);
-
-  const categorias = [
-    "Moradia",
-    "Alimentação",
-    "Transporte",
-    "Lazer",
-    "Saúde",
-    "Salário",
-    "Investimentos",
-    "Outros"
-  ];
-
-  useEffect(() => {
-    const dados = localStorage.getItem("finance-data");
-    if (dados) setLista(JSON.parse(dados));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("finance-data", JSON.stringify(lista));
-  }, [lista]);
-
-  function adicionar() {
-    if (!descricao || !valor) return;
-
-    const novo = {
-      id: Date.now(),
-      descricao,
-      valor: parseFloat(valor),
-      tipo,
-      categoria,
-      data: new Date().toLocaleDateString()
-    };
-
-    setLista([novo, ...lista]);
-    setDescricao("");
-    setValor("");
-  }
-
-  function remover(id) {
-    setLista(lista.filter((item) => item.id !== id));
-  }
-
-  const receitas = lista
-    .filter((i) => i.tipo === "income")
-    .reduce((acc, i) => acc + i.valor, 0);
-
-  const despesas = lista
-    .filter((i) => i.tipo === "expense")
-    .reduce((acc, i) => acc + i.valor, 0);
-
-  const saldo = receitas - despesas;
-
-  const dadosGrafico = categorias
-    .map((cat) => {
-      const total = lista
-        .filter((i) => i.categoria === cat && i.tipo === "expense")
-        .reduce((acc, i) => acc + i.valor, 0);
-
-      return { name: cat, value: total };
-    })
-    .filter((d) => d.value > 0);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white p-6">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold mb-8 text-center"
-      >
-        App Financeiro Completo
-      </motion.h1>
-
-      {/* Cards resumo */}
-      <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-8">
-        <Card className="bg-slate-900 border-slate-700">
-          <CardContent className="p-6 text-center">
-            <p>Receitas</p>
-            <h2 className="text-2xl font-bold text-green-400">
-              R$ {receitas.toFixed(2)}
-            </h2>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-700">
-          <CardContent className="p-6 text-center">
-            <p>Despesas</p>
-            <h2 className="text-2xl font-bold text-red-400">
-              R$ {despesas.toFixed(2)}
-            </h2>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-700">
-          <CardContent className="p-6 text-center">
-            <p>Saldo</p>
-            <h2 className="text-2xl font-bold text-blue-400">
-              R$ {saldo.toFixed(2)}
-            </h2>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Formulário */}
-      <Card className="max-w-5xl mx-auto mb-8 bg-slate-900 border-slate-700">
-        <CardContent className="p-6 grid md:grid-cols-5 gap-3">
-          <Input
-            placeholder="Descrição"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            className="text-black"
-          />
-
-          <Input
-            type="number"
-            placeholder="Valor"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            className="text-black"
-          />
-
-          <Select onValueChange={setTipo} defaultValue="expense">
-            <SelectTrigger className="bg-white text-black">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="income">Receita</SelectItem>
-              <SelectItem value="expense">Despesa</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select onValueChange={setCategoria} defaultValue="Outros">
-            <SelectTrigger className="bg-white text-black">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categorias.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button onClick={adicionar}>Adicionar</Button>
-        </CardContent>
-      </Card>
-
-      {/* Gráfico */}
-      <Card className="max-w-5xl mx-auto mb-8 bg-slate-900 border-slate-700">
-        <CardContent className="p-6">
-          <h2 className="mb-4 font-semibold">Gastos por Categoria</h2>
-          <div style={{ width: "100%", height: 300 }}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={dadosGrafico}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  label
-                >
-                  {dadosGrafico.map((_, index) => (
-                    <Cell key={index} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista */}
-      <div className="max-w-5xl mx-auto space-y-3">
-        {lista.map((item) => (
-          <motion.div key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4 flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{item.descricao}</p>
-                  <p className="text-sm text-slate-400">
-                    {item.categoria} • {item.data}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`font-bold ${
-                      item.tipo === "income"
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    R$ {item.valor.toFixed(2)}
-                  </span>
-
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => remover(item.id)}
-                  >
-                    <Trash2 size={18} />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
+<style>
+body{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+  margin:0;
+  padding:20px;
 }
+
+h1{
+  text-align:center;
+}
+
+.container{
+  max-width:1000px;
+  margin:auto;
+}
+
+.card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+}
+
+input,select,button{
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  width:100%;
+}
+
+button{
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+.list-item{
+  display:flex;
+  justify-content:space-between;
+  background:#334155;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:8px;
+}
+
+.income{color:#22c55e;}
+.expense{color:#ef4444;}
+
+.total{
+  font-size:22px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>💰 Controle Financeiro</h1>
+
+<!-- RESUMO -->
+<div class="grid">
+
+<div class="card">
+Receitas<br>
+<span id="receitas" class="total income">R$ 0</span>
+</div>
+
+<div class="card">
+Despesas<br>
+<span id="despesas" class="total expense">R$ 0</span>
+</div>
+
+<div class="card">
+Saldo<br>
+<span id="saldo" class="total">R$ 0</span>
+</div>
+
+</div>
+
+<!-- FORM -->
+<div class="card">
+
+<h3>Nova Transação</h3>
+
+<input id="desc" placeholder="Descrição">
+<br><br>
+
+<input id="valor" type="number" placeholder="Valor">
+<br><br>
+
+<select id="tipo">
+<option value="income">Receita</option>
+<option value="expense">Despesa</option>
+</select>
+<br><br>
+
+<select id="categoria">
+<option>Moradia</option>
+<option>Alimentação</option>
+<option>Transporte</option>
+<option>Lazer</option>
+<option>Saúde</option>
+<option>Salário</option>
+<option>Investimentos</option>
+<option>Outros</option>
+</select>
+<br><br>
+
+<button onclick="add()">Adicionar</button>
+
+</div>
+
+<!-- LISTA -->
+<div class="card">
+
+<h3>Histórico</h3>
+<div id="lista"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let dados = JSON.parse(localStorage.getItem("finance")) || [];
+
+function salvar(){
+  localStorage.setItem("finance",JSON.stringify(dados));
+}
+
+function add(){
+
+  const desc = document.getElementById("desc").value;
+  const valor = parseFloat(document.getElementById("valor").value);
+  const tipo = document.getElementById("tipo").value;
+  const categoria = document.getElementById("categoria").value;
+
+  if(!desc || !valor) return;
+
+  dados.push({
+    id:Date.now(),
+    desc,
+    valor,
+    tipo,
+    categoria,
+    data:new Date().toLocaleDateString()
+  });
+
+  salvar();
+  render();
+}
+
+function remover(id){
+  dados = dados.filter(i=>i.id!==id);
+  salvar();
+  render();
+}
+
+function render(){
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML="";
+
+  let receitas=0;
+  let despesas=0;
+
+  dados.forEach(i=>{
+
+    if(i.tipo==="income") receitas+=i.valor;
+    else despesas+=i.valor;
+
+    lista.innerHTML+=`
+      <div class="list-item">
+        <div>
+          <b>${i.desc}</b><br>
+          <small>${i.categoria} • ${i.data}</small>
+        </div>
+
+        <div>
+          <span class="${i.tipo}">
+            R$ ${i.valor.toFixed(2)}
+          </span>
+          <button onclick="remover(${i.id})">X</button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("receitas").innerText="R$ "+receitas.toFixed(2);
+  document.getElementById("despesas").innerText="R$ "+despesas.toFixed(2);
+  document.getElementById("saldo").innerText="R$ "+(receitas-despesas).toFixed(2);
+}
+
+render();
+
+</script>
+
+</body>
+</html>
