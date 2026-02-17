@@ -4,15 +4,12 @@ async function registrar() {
 
   const { data, error } = await supabase
     .from("users")
-    .insert([
-      { email: email, password: password }
-    ]);
+    .insert([{ email, password }]);
 
   if (error) {
     alert("Erro ao registrar: " + error.message);
-    console.log(error);
   } else {
-    alert("Usuário registrado com sucesso!");
+    alert("Usuário registrado!");
   }
 }
 
@@ -31,6 +28,7 @@ async function login() {
     alert("Login inválido");
   } else {
     alert("Login realizado!");
-    console.log(data);
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("app").style.display = "block";
   }
 }
