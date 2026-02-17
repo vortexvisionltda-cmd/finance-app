@@ -1,4 +1,4 @@
-async function registrar() {
+async function register() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
@@ -9,7 +9,7 @@ async function registrar() {
   if (error) {
     alert("Erro ao registrar: " + error.message);
   } else {
-    alert("Usuário registrado!");
+    alert("Usuário criado!");
   }
 }
 
@@ -27,8 +27,24 @@ async function login() {
   if (error || !data) {
     alert("Login inválido");
   } else {
-    alert("Login realizado!");
     document.getElementById("auth").style.display = "none";
     document.getElementById("app").style.display = "block";
+  }
+}
+
+async function addTransaction() {
+  const type = document.getElementById("type").value;
+  const amount = document.getElementById("amount").value;
+  const description = document.getElementById("description").value;
+  const date = document.getElementById("date").value;
+
+  const { error } = await supabase
+    .from("transactions")
+    .insert([{ type, amount, description, date }]);
+
+  if (error) {
+    alert("Erro ao salvar");
+  } else {
+    alert("Salvo!");
   }
 }
