@@ -1,47 +1,142 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Finance App</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Finance App</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+
+.container{
+  background:#111827;
+  padding:25px;
+  border-radius:12px;
+  width:400px;
+  box-shadow:0 0 20px #000;
+}
+
+h1{
+  text-align:center;
+}
+
+input, select{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#16a34a;
+}
+
+.list{
+  margin-top:20px;
+}
+
+.item{
+  background:#1f2937;
+  padding:10px;
+  border-radius:8px;
+  margin-top:8px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.income{color:#22c55e;}
+.expense{color:#ef4444;}
+
+.total{
+  margin-top:20px;
+  font-size:20px;
+  text-align:center;
+}
+</style>
 </head>
+
 <body>
 
-<h1>Finance App</h1>
+<div class="container">
 
-<div id="auth">
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Senha">
-  <button onclick="registrar()">Registrar</button>
-  <button onclick="login()">Login</button>
-</div>
+<h1>💰 Finance App</h1>
 
-<hr>
+<select id="type">
+  <option value="income">Receita</option>
+  <option value="expense">Despesa</option>
+</select>
 
-<div id="app" style="display:none">
+<input id="desc" placeholder="Descrição">
+<input id="value" type="number" placeholder="Valor">
 
-  <h2>Nova Transação</h2>
+<button onclick="add()">Adicionar</button>
 
-  <select id="type">
-    <option value="income">Receita</option>
-    <option value="expense">Despesa</option>
-  </select>
+<div class="list" id="list"></div>
 
-  <input id="amount" placeholder="Valor">
-  <input id="description" placeholder="Descrição">
-  <input id="date" type="date">
-
-  <button onclick="addTransaction()">Salvar</button>
-
-  <h2>Transações</h2>
-  <ul id="list"></ul>
+<div class="total" id="total">Saldo: R$ 0</div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="supabase.js"></script>
-<script src="app.js"></script>
+<script>
+let data = [];
+
+function add(){
+
+  const type = document.getElementById("type").value;
+  const desc = document.getElementById("desc").value;
+  const value = Number(document.getElementById("value").value);
+
+  if(!desc || !value) return alert("Preencha tudo");
+
+  data.push({type, desc, value});
+
+  render();
+}
+
+function render(){
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  let total = 0;
+
+  data.forEach(item=>{
+
+    total += item.type=="income" ? item.value : -item.value;
+
+    list.innerHTML += `
+      <div class="item">
+        <span>${item.desc}</span>
+        <span class="${item.type}">
+          ${item.type=="income" ? "+" : "-"} R$ ${item.value}
+        </span>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText =
+    "Saldo: R$ " + total;
+}
+</script>
 
 </body>
 </html>
-
